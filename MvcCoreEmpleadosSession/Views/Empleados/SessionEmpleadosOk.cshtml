@@ -1,13 +1,35 @@
 ﻿@model List<Empleado>
 
+@{
+    List<int> idsEmpleados = Context.Session.GetObject<List<int>>("IDSEMPLEADOS");
+    List<Empleado> favoritos = memoryCache.Get<List<Empleado>>("FAVORITOS");
+}
+
 <h1 style="color:fuchsia">
     Empleados Session List Ok
 </h1>
+
+@if (idsEmpleados != null)
+{
+    <h2 class="text-success">Empleados en Session: @idsEmpleados.Count()</h2>
+}
+
+@if (favoritos != null)
+{
+    <h2 class="text-danger">Empleados favoritos: @favoritos.Count()</h2>
+}
 
 <p>
     <a asp-controller="Empleados"
        asp-action="EmpleadosAlmacenadosOk">
         Empleados Almacenados Session
+    </a>
+</p>
+
+<p>
+    <a asp-controller="Empleados"
+       asp-action="EmpleadosFavoritos">
+        Empleados Favoritos
     </a>
 </p>
 
@@ -18,10 +40,32 @@
     {
         <li class="list-group-item list-group-item-success">
             @emp.Apellido
-            <a asp-controller="Empleados" asp-action="EmpleadosAlmacenadosOk"
-               asp-route-idempleado="@emp.IdEmpleado">
-                Almacenar empleado
-            </a>
+            <a asp-controller="Empleados"
+               asp-action="SessionEmpleadosOk"
+               asp-route-idfavorito="@emp.IdEmpleado">Favorito</a>
+            <span> | </span>
+            @if (idsEmpleados != null)
+            {
+                @if (idsEmpleados.Contains(@emp.IdEmpleado))
+                {
+                    <img class="ms-3" width="50" height="50"
+                         src="https://josuegadea.com/wp-content/uploads/2018/02/check-mark-tick.png" />
+                }
+                else
+                {
+                    <a asp-controller="Empleados" asp-action="SessionEmpleadosOk"
+                       asp-route-idempleado="@emp.IdEmpleado">
+                        Almacenar empleado
+                    </a>
+                }
+            }
+            else
+            {
+                <a asp-controller="Empleados" asp-action="SessionEmpleadosOk"
+                   asp-route-idempleado="@emp.IdEmpleado">
+                    Almacenar empleado
+                </a>
+            }
         </li>
     }
 </ul>

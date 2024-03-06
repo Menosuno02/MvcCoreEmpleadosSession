@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
 using MvcCoreEmpleadosSession.Extensions;
 using MvcCoreEmpleadosSession.Models;
 using MvcCoreEmpleadosSession.Repositories;
@@ -8,18 +9,35 @@ namespace MvcCoreEmpleadosSession.Controllers
     public class EmpleadosController : Controller
     {
         private RepositoryEmpleados repo;
+        private IMemoryCache memoryCache;
 
-        public EmpleadosController(RepositoryEmpleados repo)
+        public EmpleadosController(RepositoryEmpleados repo, IMemoryCache memoryCache)
         {
             this.repo = repo;
+            this.memoryCache = memoryCache;
         }
 
-        public async Task<IActionResult> SessionEmpleadosOk(int? idempleado)
+        public IActionResult EmpleadosFavoritos()
+        {
+            if (this.memoryCache.Get("FAVORITOS") == null)
+            {
+                ViewData["MENSAJE"] = "No tiene empleados favoritos";
+                return View();
+            }
+            else
+            {
+                List<Empleado> favoritos =
+                    this.memoryCache.Get<List<Empleado>>("FAVORITOS");
+                return View(favoritos);
+            }
+        }
+
+        public async Task<IActionResult> SessionEmpleadosOk
+            (int? idempleado, int? idfavorito)
         {
             if (idempleado != null)
             {
-                // Almacenamos lo
-                // mínimo, colección int
+                // Almacenamos lo mínimo, colección int
                 List<int> idsEmpleados;
                 if (HttpContext.Session.GetString("IDSEMPLEADOS") == null)
                 {
@@ -33,12 +51,67 @@ namespace MvcCoreEmpleadosSession.Controllers
                 HttpContext.Session.SetObject("IDSEMPLEADOS", idsEmpleados);
                 ViewData["MENSAJE"] = "Empleados almacenados: " + idsEmpleados.Count();
             }
+            if (idfavorito != null)
+            {
+                List<Empleado> empleadosFavoritos;
+                if (this.memoryCache.Get("FAVORITOS") == null)
+                {
+                    empleadosFavoritos = new List<Empleado>();
+                }
+                else
+                {
+                    empleadosFavoritos =
+                        this.memoryCache.Get<List<Empleado>>("FAVORITOS");
+                }
+                Empleado empleado =
+                    await this.repo.FindEmpleadoAsync(idfavorito.Value);
+                empleadosFavoritos.Add(empleado);
+                this.memoryCache.Set("FAVORITOS", empleadosFavoritos);
+            }
+            List<int> ids = HttpContext.Session.GetObject<List<int>>("IDSEMPLEADOS");
+            // Si queremos que se borren del listado al añadirlos al Session
+            /*
+            if (ids == null)
+            {
+                List<Empleado> empleados = await this.repo.GetEmpleadosAsync();
+                return View(empleados);
+            }
+            else
+            {
+                List<Empleado> empleados =
+                    await this.repo.GetEmpleadosNotInSessionAsync(ids);
+                return View(empleados);
+            }
+            */
             List<Empleado> empleados = await this.repo.GetEmpleadosAsync();
-            return View();
+            return View(empleados);
         }
 
-        public IActionResult EmpleadosAlmacenadosOk()
+        [ResponseCache(Duration = 80, Location = ResponseCacheLocation.Client)]
+        public async Task<IActionResult> EmpleadosAlmacenadosOk(int? ideliminar)
         {
+            List<int> idsEmpleados =
+                HttpContext.Session.GetObject<List<int>>("IDSEMPLEADOS");
+            if (idsEmpleados != null)
+            {
+                // Eliminar de Session
+                if (ideliminar != null)
+                {
+                    idsEmpleados.Remove(ideliminar.Value);
+                    // Debemos preguntar si ya no tenemos empleados en la colección
+                    if (idsEmpleados.Count() == 0)
+                    {
+                        HttpContext.Session.Remove("IDSEMPLEADOS");
+                    }
+                    else
+                    {
+                        HttpContext.Session.SetObject("IDSEMPLEADOS", idsEmpleados);
+                    }
+                }
+                List<Empleado> empleados =
+                    await this.repo.GetEmpleadosSessionAsync(idsEmpleados);
+                return View(empleados);
+            }
             return View();
         }
 

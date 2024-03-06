@@ -1,0 +1,37 @@
+﻿@model List<Empleado>
+
+<h1>Empleados favoritos</h1>
+
+<p>
+    <a asp-controller="Empleados"
+       asp-action="SessionEmpleadosOk">
+        Almacenar empleados
+    </a>
+</p>
+
+<h2 class="text-danger">
+    @ViewData["MENSAJE"]
+</h2>
+
+@if (Model != null)
+{
+    <table class="table table-borderless">
+        <thead>
+            <tr>
+                <th>Apelldio</th>
+                <th>Oficio</th>
+                <th>Salario</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (Empleado emp in Model)
+            {
+                <tr>
+                    <td>@emp.Apellido</td>
+                    <td>@emp.Oficio</td>
+                    <td>@emp.Salario</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
