@@ -40,10 +40,28 @@
     {
         <li class="list-group-item list-group-item-success">
             @emp.Apellido
-            <a asp-controller="Empleados"
-               asp-action="SessionEmpleadosOk"
-               asp-route-idfavorito="@emp.IdEmpleado">Favorito</a>
-            <span> | </span>
+            @if (favoritos == null)
+            {
+                <a asp-controller="Empleados"
+                   asp-action="SessionEmpleadosOk"
+                   asp-route-idfavorito="@emp.IdEmpleado">Favorito</a>
+                <span> | </span>
+            }
+            else
+            {
+                @if(favoritos.Find(e => e.IdEmpleado == emp.IdEmpleado) != null)
+                {
+                    <img class="ms-3" width="50" height="50"
+                         src="https://josuegadea.com/wp-content/uploads/2018/02/check-mark-tick.png" />
+                }
+                else
+                {
+                    <a asp-controller="Empleados"
+                       asp-action="SessionEmpleadosOk"
+                       asp-route-idfavorito="@emp.IdEmpleado">Favorito</a>
+                    <span> | </span>
+                }
+            }
             @if (idsEmpleados != null)
             {
                 @if (idsEmpleados.Contains(@emp.IdEmpleado))
