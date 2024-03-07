@@ -1,4 +1,6 @@
-﻿<!DOCTYPE html>
+﻿
+
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -25,28 +27,41 @@
                         <li class="nav-item">
                             <a class="nav-link text-dark"
                                asp-controller="Empleados" asp-action="SessionSalarios">
-                                Session Salarios
+                                SessionSalarios
                             </a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link text-dark"
                                asp-controller="Empleados" asp-action="SessionEmpleados">
-                                Session Empleados
+                                SessionEmpleados
                             </a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link text-dark"
                                asp-controller="Empleados" asp-action="SessionEmpleadosOk">
-                                Session Empleados OK
+                                SessionEmpleadosOK
                             </a>
                         </li>
                     </ul>
                 </div>
             </div>
+            @{
+                List<int> idsEmpleados = Context.Session.GetObject<List<int>>("IDSEMPLEADOS");
+                List<Empleado> favoritos = memoryCache.Get<List<Empleado>>("FAVORITOS");
+            }
+            @if (idsEmpleados != null)
+            {
+                <h4 class="badge bg-success">Compras: @idsEmpleados.Count()</h4>
+            }
+            @if (favoritos != null)
+            {
+                <h4 class="badge bg-danger">Favs: @favoritos.Count()</h4>
+            }
         </nav>
     </header>
     <div class="container">
         <main role="main" class="pb-3">
+
             @RenderBody()
         </main>
     </div>
